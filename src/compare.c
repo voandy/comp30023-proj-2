@@ -11,15 +11,35 @@
 
 #define FOUND "found_pwds.txt"
 
+#define ALPHA "aeoirsntlmdcbkuhgpyfjvwzxq"
+#define CAPS "AESRTBMDNCLOGIHKPFJUYVWZXQ"
+#define NUM "1203549678"
+#define SPEC "-._*!'@$?#;%&^+~=[\\`]|{}"
+
+#define CHARS 95
+
 void dictAttack(BYTE ** passwords, int passwordCount,
   BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile);
+void stringPerms(BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters);
 
 void crack(BYTE ** passwords, int passwordCount) {
   BYTE buf[SHA256_BLOCK_SIZE];
   SHA256_CTX ctx;
 
-  dictAttack(passwords, passwordCount, buf, ctx, DICT_4);
+  // try most common passwords first
   dictAttack(passwords, passwordCount, buf, ctx, DICT_6);
+
+  // no dict match, try all combination of small letters
+  // stringPerms(passwords, passwordCount, buf, ctx, ALPHA);
+
+  // still no luck, try all possible combinations
+  char chars[CHARS] = ALPHA;
+  strcat(chars, CAPS);
+  strcat(chars, NUM);
+  strcat(chars, SPEC);
+  printf("%s\n", chars);
+  stringPerms(passwords, passwordCount, buf, ctx, chars);
 
 }
 
@@ -47,6 +67,36 @@ void dictAttack(BYTE ** passwords, int passwordCount,
   fclose(dict);
 
   return;
+}
+
+// generates and tests all 6 char perumations given a set of characters
+void stringPerms(BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters) {
+  int size = strlen(characters);
+  BYTE guess[6];
+
+  // forgive me Dennis Ritchie for I have sinned
+  for (int i=0; i<size; i++) {
+    for (int j=0; j<size; j++) {
+      for (int k=0; k<size; k++) {
+        for (int l=0; l<size; l++) {
+          for (int m=0; m<size; m++) {
+            for (int n=0; n<size; n++) {
+              guess[0] = characters[i];
+              guess[1] = characters[j];
+              guess[2] = characters[k];
+              guess[3] = characters[l];
+              guess[4] = characters[m];
+              guess[5] = characters[n];
+              guess[6] = 0;
+
+              comparePWD(guess, passwords, passwordCount, buf, ctx);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 // hashes a guess and compares against all given hashes
