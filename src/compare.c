@@ -23,6 +23,7 @@ void crack(BYTE ** passwords, int passwordCount) {
 
 }
 
+// hash and guess all the words in a given dict file
 void dictAttack(BYTE ** passwords, int passwordCount,
   BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile) {
 
@@ -38,6 +39,7 @@ void dictAttack(BYTE ** passwords, int passwordCount,
   size_t characters;
 
   while ((characters = getline(&line, &len, dict)) != -1) {
+    // replace the new line char
     line[characters - 1] = 0;
     comparePWD((BYTE *)line, passwords, passwordCount, buf, ctx);
   }
@@ -55,7 +57,7 @@ int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
   sha256_update(&ctx, guess, strlen((const char*)guess));
   sha256_final(&ctx, buf);
 
-  for (int i=0; i<passwordCount; i++){
+  for (int i=0; i<passwordCount; i++) {
     if (!memcmp(passwords[i], buf, SHA256_BLOCK_SIZE)) {
       printf("%s %d\n", guess, i + 1);
       return i;

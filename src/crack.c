@@ -4,6 +4,7 @@
 
 #include "sha256.h"
 #include "compare.h"
+#include "generate.h"
 
 typedef enum
 {
