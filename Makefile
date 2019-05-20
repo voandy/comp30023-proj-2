@@ -5,7 +5,7 @@ CC = gcc
 FLAGS = -c -Wall -Wpedantic -g
 
 all: mkbin $(OBJS)
-	$(CC) bin/crack.o bin/sha256.o -o $(OUT)
+	$(CC) -g bin/crack.o bin/sha256.o -o $(OUT)
 
 crack.o: src/crack.c $(HEADER)
 	$(CC) $(FLAGS) src/crack.c -o bin/crack.o -std=c99
