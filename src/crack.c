@@ -13,7 +13,7 @@ typedef enum
     MATCH
 } MODE;
 
-#define PWDS "pwdsha256"
+#define PWDS "test/pwdsha256"
 
 int countPasswords(char *filename);
 BYTE ** readPasswords(int passwordCount, char * filename);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 }
 
 // given a filename, opens the file and counts the number of hashes
-int countPasswords(char *filename) {
+static int countPasswords(char *filename) {
   FILE *fp;
   int passwordCount;
 
@@ -97,7 +97,7 @@ int countPasswords(char *filename) {
 }
 
 // reads password hashes from file into array
-BYTE ** readPasswords(int passwordCount, char * filename) {
+static BYTE ** readPasswords(int passwordCount, char * filename) {
   BYTE ** passwords;
 
   passwords = malloc(passwordCount * sizeof(BYTE *));

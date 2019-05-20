@@ -1,6 +1,7 @@
 #include "compare.h"
 
-#define _GNU_SOURCE
+// #define _GNU_SOURCE
+#define _POSIX_C_SOURCE=200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -30,10 +31,10 @@ void crack(BYTE ** passwords, int passwordCount) {
   // try most common passwords first
   dictAttack(passwords, passwordCount, buf, ctx, DICT_6);
 
-  // no dict match, try all combination of small letters
-  // stringPerms(passwords, passwordCount, buf, ctx, ALPHA);
+  // try all combination of small letters
+  stringPerms(passwords, passwordCount, buf, ctx, ALPHA);
 
-  // still no luck, try all possible combinations
+  // try all possible combinations
   char chars[CHARS] = ALPHA;
   strcat(chars, CAPS);
   strcat(chars, NUM);
@@ -43,7 +44,7 @@ void crack(BYTE ** passwords, int passwordCount) {
 
 }
 
-// hash and guess all the words in a given dict file
+// hash and guess all the words in a given file
 void dictAttack(BYTE ** passwords, int passwordCount,
   BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile) {
 
