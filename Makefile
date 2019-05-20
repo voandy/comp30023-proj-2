@@ -2,10 +2,10 @@ OBJS = crack.o sha256.o compare.o
 HEADER = src/sha256.h src/compare.h
 OUT = crack
 CC = gcc
-FLAGS = -c -Wall -Wpedantic -g
+FLAGS = -c -Wall -Wpedantic #-g
 
 all: mkbin $(OBJS)
-	$(CC) -g bin/crack.o bin/sha256.o bin/compare.o -o $(OUT)
+	$(CC) bin/crack.o bin/sha256.o bin/compare.o -o $(OUT)
 
 crack.o: src/crack.c $(HEADER)
 	$(CC) $(FLAGS) src/crack.c -o bin/crack.o -std=c99

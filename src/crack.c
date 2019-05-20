@@ -53,13 +53,13 @@ int main(int argc, char *argv[]) {
   }
 
   if (mode == GUESSES) {
-    int numGuesses = atoi(argv[1]);
+    // int numGuesses = atoi(argv[1]);
     return 0;
   }
 
   if (mode == MATCH) {
-    char * guesses = argv[1];
-    char * passwords = argv[2];
+    // char * guesses = argv[1];
+    // char * passwords = argv[2];
     return 0;
   }
 
