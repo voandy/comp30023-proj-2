@@ -1,67 +1,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <memory.h>
-
-#include <stdbool.h>
 
 #include "sha256.h"
+#include "compare.h"
 
 typedef enum
 {
-    UNLIMITED,
-    LIMITED,
+    CRACK,
+    GUESSES,
     MATCH
 } MODE;
 
-#define PWD4 "pwd4sha256"
-#define PWD6 "pwd6sha256"
+#define PWDS "pwdsha256"
 
 int countPasswords(char *filename);
 BYTE ** readPasswords(int passwordCount, char * filename);
 
 int main(int argc, char *argv[]) {
-
   MODE mode;
 
   switch (argc) {
     case 1:
-    mode = UNLIMITED;
+    mode = CRACK;
     break;
     case 2:
-    mode = LIMITED;
+    mode = GUESSES;
     break;
     case 3:
     mode = MATCH;
     break;
+    default:
+    perror("Too many arguments.\n");
+    exit(EXIT_FAILURE);
   }
 
-  switch (mode) {
-    case UNLIMITED:
-    break;
-    case LIMITED:
-    break;
-    case MATCH:
-    break;
+  if (mode == CRACK) {
+    BYTE ** passwords;
+    int passwordCount;
+
+    passwordCount = countPasswords(PWDS);
+    passwords = readPasswords(passwordCount, PWDS);
+
+    crack(passwords, passwordCount);
+
+    for (int i=0; i<passwordCount; i++) {
+      free(passwords[i]);
+    }
+    free(passwords);
+
+    return 0;
   }
 
-  BYTE ** passwords;
-  int passwordCount = countPasswords("pwd4sha256");
-
-  passwords = readPasswords(passwordCount, "pwd4sha256");
-
-  // for (int j=0; j<passwordCount; j++){
-  //   for (int i=0; i<SHA256_BLOCK_SIZE; i++) {
-  //     printf("0X%02x ", passwords[j][i]);
-  //   }
-  //   printf("\n");
-  // }
-
-
-  for (int i=0; i<passwordCount; i++) {
-    free(passwords[i]);
+  if (mode == GUESSES) {
+    int numGuesses = atoi(argv[1]);
+    return 0;
   }
-  free(passwords);
+
+  if (mode == MATCH) {
+    char * guesses = argv[1];
+    char * passwords = argv[2];
+    return 0;
+  }
 
   return 0;
 }
