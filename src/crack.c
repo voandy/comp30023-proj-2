@@ -6,8 +6,7 @@
 #include "compare.h"
 #include "generate.h"
 
-typedef enum
-{
+typedef enum {
     CRACK,
     GUESSES,
     MATCH
@@ -15,8 +14,8 @@ typedef enum
 
 #define PWDS "test/pwdsha256"
 
-int countPasswords(char *filename);
-BYTE ** readPasswords(int passwordCount, char * filename);
+static int countPasswords(char *filename);
+static BYTE ** readPasswords(int passwordCount, char * filename);
 
 int main(int argc, char *argv[]) {
   MODE mode;
@@ -54,7 +53,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (mode == GUESSES) {
-    // int numGuesses = atoi(argv[1]);
+    INTEGER numGuesses = atoll(argv[1]);
     return 0;
   }
 

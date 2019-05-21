@@ -1,7 +1,7 @@
 #include "compare.h"
 
 // #define _GNU_SOURCE
-#define _POSIX_C_SOURCE=200809L
+// #define _POSIX_C_SOURCE=200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -19,20 +19,25 @@
 
 #define CHARS 95
 
-void dictAttack(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile);
-void stringPerms(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters);
+static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx);
+static int dictAttack(BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile,
+  INTEGER generate);
+static int stringPerms(BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters,
+  INTEGER generate);
 
 void crack(BYTE ** passwords, int passwordCount) {
   BYTE buf[SHA256_BLOCK_SIZE];
   SHA256_CTX ctx;
+  memset(&ctx, 0, sizeof(ctx));
 
   // try most common passwords first
-  dictAttack(passwords, passwordCount, buf, ctx, DICT_6);
+  dictAttack(passwords, passwordCount, buf, ctx, DICT_6, 0);
 
   // try all combination of small letters
-  stringPerms(passwords, passwordCount, buf, ctx, ALPHA);
+  stringPerms(passwords, passwordCount, buf, ctx, ALPHA, 0);
 
   // try all possible combinations
   char chars[CHARS] = ALPHA;
@@ -40,19 +45,20 @@ void crack(BYTE ** passwords, int passwordCount) {
   strcat(chars, NUM);
   strcat(chars, SPEC);
   printf("%s\n", chars);
-  stringPerms(passwords, passwordCount, buf, ctx, chars);
-
+  stringPerms(passwords, passwordCount, buf, ctx, chars, 0);
 }
 
 // hash and guess all the words in a given file
-void dictAttack(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile) {
+static int dictAttack(BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile,
+  INTEGER generate) {
 
+  INTEGER count = 0;
   FILE *dict = fopen (dictfile, "r");
 
   if (dict == NULL) {
     perror (dictfile);
-    return;
+    return 0;
   }
 
   char * line = NULL;
@@ -62,19 +68,31 @@ void dictAttack(BYTE ** passwords, int passwordCount,
   while ((characters = getline(&line, &len, dict)) != -1) {
     // replace the new line char
     line[characters - 1] = 0;
-    comparePWD((BYTE *)line, passwords, passwordCount, buf, ctx);
+    if (generate) {
+      printf("%s\n", line);
+      count++;
+      if (count >= generate) {
+        return count;
+      }
+    } else {
+      comparePWD((BYTE *)line, passwords, passwordCount, buf, ctx);
+    }
+    count++;
   }
 
   fclose(dict);
 
-  return;
+  return count;
 }
 
 // generates and tests all 6 char perumations given a set of characters
-void stringPerms(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters) {
+static int stringPerms(BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters,
+  INTEGER generate) {
+
+  INTEGER count = 0;
   int size = strlen(characters);
-  BYTE guess[6];
+  BYTE guess[7];
 
   // forgive me Dennis Ritchie for I have sinned
   for (int i=0; i<size; i++) {
@@ -91,17 +109,26 @@ void stringPerms(BYTE ** passwords, int passwordCount,
               guess[5] = characters[n];
               guess[6] = 0;
 
-              comparePWD(guess, passwords, passwordCount, buf, ctx);
+              if (generate) {
+                printf("%s\n", guess);
+                count++;
+                if (count >= generate) {
+                  return count;
+                }
+              } else {
+                comparePWD(guess, passwords, passwordCount, buf, ctx);
+              }
             }
           }
         }
       }
     }
   }
+  return count;
 }
 
 // hashes a guess and compares against all given hashes
-int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
+static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
   BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx) {
 
   sha256_init(&ctx);
