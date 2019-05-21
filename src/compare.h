@@ -14,5 +14,7 @@ typedef struct {
 
 void crack(BYTE ** passwords, int passwordCount);
 void generate(INTEGER n);
+int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
+  INTEGER generate);
 
 #endif

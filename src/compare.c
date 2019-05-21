@@ -6,7 +6,7 @@
 #include <memory.h>
 #include <string.h>
 
-#define RAND_LIM 10000
+#define RAND_LIM 100000
 
 #define DICT_4 "refs/common_4_pwds.txt"
 #define DICT_6 "refs/common_6_pwds.txt"
@@ -15,15 +15,14 @@
 #define ALL_CHARS " !\"#$%&'()*+,-./0123456789:;<=>?`@ABCDEFGHIJKLMNOPQRSTUVWXY\
 Z[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
-static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx);
-static int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
-  INTEGER generate);
 static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
   INTEGER generate);
 static int randomGuess(INTEGER generate);
 static char randChar(CHAR_FREQ * charFreqs);
+static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx);
 
+// attempt to crack given passwords using a variety of guess methods
 void crack(BYTE ** passwords, int passwordCount) {
   // try most common passwords first
   dictAttack(passwords, passwordCount, DICT_6, 0);
@@ -35,17 +34,18 @@ void crack(BYTE ** passwords, int passwordCount) {
   stringPerms(passwords, passwordCount, ALL_CHARS, 0);
 }
 
+// generate and print guesses
 void generate(INTEGER n) {
   // dummy pointer, unused
   BYTE ** passwords;
   memset(&passwords, 0, sizeof(passwords));
 
-  // first try known and common passwords
+  // first print known and common passwords
   n -= dictAttack(passwords, 0, DICT_6, n);
   if (n <= 0)
     return;
 
-  // then try some random guesses with common characters
+  // then print some random guesses using common characters
   n-= randomGuess(n);
   if (n <= 0)
     return;
@@ -65,7 +65,7 @@ void generate(INTEGER n) {
 }
 
 // hash and guess all the words in a given file
-static int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
+int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
   INTEGER generate) {
 
   BYTE buf[SHA256_BLOCK_SIZE];

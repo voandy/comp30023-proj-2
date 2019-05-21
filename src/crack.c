@@ -58,8 +58,22 @@ int main(int argc, char *argv[]) {
   }
 
   if (mode == MATCH) {
-    // char * guesses = argv[1];
-    // char * passwords = argv[2];
+    char * guessFile = argv[1];
+    char * pwdsFile = argv[2];
+
+    BYTE ** passwords;
+    int passwordCount;
+
+    passwordCount = countPasswords(pwdsFile);
+    passwords = readPasswords(passwordCount, pwdsFile);
+
+    dictAttack(passwords, passwordCount, guessFile, 0);
+
+    for (int i=0; i<passwordCount; i++) {
+      free(passwords[i]);
+    }
+    free(passwords);
+
     return 0;
   }
 
