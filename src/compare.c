@@ -1,7 +1,6 @@
 #include "compare.h"
 
-// #define _GNU_SOURCE
-// #define _POSIX_C_SOURCE=200809L
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -10,50 +9,63 @@
 #define DICT_4 "refs/common_4_pwds.txt"
 #define DICT_6 "refs/common_6_pwds.txt"
 
-#define FOUND "found_pwds.txt"
-
-#define ALPHA "aeoirsntlmdcbkuhgpyfjvwzxq"
-#define CAPS "AESRTBMDNCLOGIHKPFJUYVWZXQ"
-#define NUM "1203549678"
-#define SPEC "-._*!'@$?#;%&^+~=[\\`]|{}"
-
-#define CHARS 95
+#define FREQ_CHARS "aeoilnrsmtchuypkdb2vgf1jw"
+#define ALL_CHARS " !\"#$%&'()*+,-./0123456789:;<=>?`@ABCDEFGHIJKLMNOPQRSTUVWXY\
+Z[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
 static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
   BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx);
-static int dictAttack(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile,
+static int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
   INTEGER generate);
-static int stringPerms(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters,
+static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
   INTEGER generate);
+static int randomGuess(BYTE ** passwords, int passwordCount, INTEGER generate);
 
 void crack(BYTE ** passwords, int passwordCount) {
+  // try most common passwords first
+  dictAttack(passwords, passwordCount, DICT_6, 0);
+
+  // try all permutations of frequently used characters
+  stringPerms(passwords, passwordCount, FREQ_CHARS, 0);
+
+  // try all possible permutations
+  stringPerms(passwords, passwordCount, ALL_CHARS, 0);
+}
+
+void generate(INTEGER n) {
+  // dummy pointer, unused
+  BYTE ** passwords;
+  memset(&passwords, 0, sizeof(passwords));
+
+  // first try known and common passwords
+  n -= dictAttack(passwords, 0, DICT_6, n);
+  if (n <= 0)
+    return;
+
+  // try all permutations of frequently used characters
+  n -= stringPerms(passwords, 0, FREQ_CHARS, n);
+  if (n <= 0)
+    return;
+
+  // try all possible permutations
+  n -= stringPerms(passwords, 0, ALL_CHARS, n);
+  if (n <= 0)
+    return;
+
+  perror("All possible combinations generated");
+  return;
+}
+
+// hash and guess all the words in a given file
+static int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
+  INTEGER generate) {
+
   BYTE buf[SHA256_BLOCK_SIZE];
   SHA256_CTX ctx;
   memset(&ctx, 0, sizeof(ctx));
 
-  // try most common passwords first
-  dictAttack(passwords, passwordCount, buf, ctx, DICT_6, 0);
-
-  // try all combination of small letters
-  stringPerms(passwords, passwordCount, buf, ctx, ALPHA, 0);
-
-  // try all possible combinations
-  char chars[CHARS] = ALPHA;
-  strcat(chars, CAPS);
-  strcat(chars, NUM);
-  strcat(chars, SPEC);
-  printf("%s\n", chars);
-  stringPerms(passwords, passwordCount, buf, ctx, chars, 0);
-}
-
-// hash and guess all the words in a given file
-static int dictAttack(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * dictfile,
-  INTEGER generate) {
-
   INTEGER count = 0;
+
   FILE *dict = fopen (dictfile, "r");
 
   if (dict == NULL) {
@@ -77,7 +89,6 @@ static int dictAttack(BYTE ** passwords, int passwordCount,
     } else {
       comparePWD((BYTE *)line, passwords, passwordCount, buf, ctx);
     }
-    count++;
   }
 
   fclose(dict);
@@ -86,11 +97,15 @@ static int dictAttack(BYTE ** passwords, int passwordCount,
 }
 
 // generates and tests all 6 char perumations given a set of characters
-static int stringPerms(BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx, char * characters,
+static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
   INTEGER generate) {
 
+  BYTE buf[SHA256_BLOCK_SIZE];
+  SHA256_CTX ctx;
+  memset(&ctx, 0, sizeof(ctx));
+
   INTEGER count = 0;
+
   int size = strlen(characters);
   BYTE guess[7];
 
@@ -125,6 +140,11 @@ static int stringPerms(BYTE ** passwords, int passwordCount,
     }
   }
   return count;
+}
+
+// tries random passwords based on most frequent characters
+static int randomGuess(BYTE ** passwords, int passwordCount, INTEGER generate) {
+  return 0;
 }
 
 // hashes a guess and compares against all given hashes

@@ -4,7 +4,6 @@
 
 #include "sha256.h"
 #include "compare.h"
-#include "generate.h"
 
 typedef enum {
     CRACK,
@@ -53,7 +52,8 @@ int main(int argc, char *argv[]) {
   }
 
   if (mode == GUESSES) {
-    INTEGER numGuesses = atoll(argv[1]);
+    INTEGER n = atoll(argv[1]);
+    generate(n);
     return 0;
   }
 

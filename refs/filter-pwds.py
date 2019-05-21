@@ -1,4 +1,4 @@
-passwords = open("10-million-passwords.txt", "r")
+passwords = open("common_passwords.txt", "r")
 output = open("common_6_pwds.txt", "w")
 
 # filter to 6 char passwords (7 - newline char) and output to new file
