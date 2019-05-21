@@ -3,7 +3,14 @@
 
 #include "sha256.h"
 
+#define NUM_FREQ_CHARS 65
+
 typedef long long INTEGER;
+
+typedef struct {
+  char c;
+  double freq;
+} CHAR_FREQ;
 
 void crack(BYTE ** passwords, int passwordCount);
 void generate(INTEGER n);

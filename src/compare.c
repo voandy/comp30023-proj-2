@@ -6,6 +6,8 @@
 #include <memory.h>
 #include <string.h>
 
+#define RAND_LIM 10000
+
 #define DICT_4 "refs/common_4_pwds.txt"
 #define DICT_6 "refs/common_6_pwds.txt"
 
@@ -19,7 +21,8 @@ static int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
   INTEGER generate);
 static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
   INTEGER generate);
-static int randomGuess(BYTE ** passwords, int passwordCount, INTEGER generate);
+static int randomGuess(INTEGER generate);
+static char randChar(CHAR_FREQ * charFreqs);
 
 void crack(BYTE ** passwords, int passwordCount) {
   // try most common passwords first
@@ -39,6 +42,11 @@ void generate(INTEGER n) {
 
   // first try known and common passwords
   n -= dictAttack(passwords, 0, DICT_6, n);
+  if (n <= 0)
+    return;
+
+  // then try some random guesses with common characters
+  n-= randomGuess(n);
   if (n <= 0)
     return;
 
@@ -143,8 +151,53 @@ static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
 }
 
 // tries random passwords based on most frequent characters
-static int randomGuess(BYTE ** passwords, int passwordCount, INTEGER generate) {
-  return 0;
+static int randomGuess(INTEGER generate) {
+  CHAR_FREQ charFreqs[NUM_FREQ_CHARS] = {0};
+
+  char * line = NULL;
+  size_t len = 0;
+
+  FILE *freqFile = fopen ("refs/freqs.csv", "r");
+
+  for (int i=0; i<NUM_FREQ_CHARS; i++) {
+    getline(&line, &len, freqFile);
+    charFreqs[i].c =line[0];
+    char * freq = &line[2];
+    charFreqs[i].freq = atof(freq);
+  }
+
+  INTEGER count = 0;
+
+  char guess[6];
+
+  while (1) {
+    for (int i=0; i<6; i++) {
+      guess[i] = randChar(charFreqs);
+    }
+    guess[6] = 0;
+    printf("%s\n", guess);
+
+    count++;
+    if (count >= generate || count >= RAND_LIM) {
+      return count;
+    }
+  }
+  return count;
+}
+
+// returns a random character based on frequencies given
+static char randChar(CHAR_FREQ * charFreqs) {
+  char c;
+  double randomNum = (double)rand() / (double)RAND_MAX;
+
+  for(int i=0; i<NUM_FREQ_CHARS; i++) {
+    if(randomNum <= charFreqs[i].freq) {
+      c = charFreqs[i].c;
+      break;
+    }
+  }
+
+  return c;
 }
 
 // hashes a guess and compares against all given hashes
