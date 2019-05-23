@@ -6,6 +6,7 @@
 
 # Executable
 crack
+dh
 
 # Unfiltered dict
 refs/10-million-passwords.txt

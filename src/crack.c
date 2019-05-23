@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  // 0 arg mode: crack passwords
   if (mode == CRACK) {
     BYTE ** passwords;
     int passwordCount;
@@ -51,12 +52,26 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+  // 1 arg mode: generate and print guesses
   if (mode == GUESSES) {
     INTEGER n = atoll(argv[1]);
+
+    /*
+    This is a multi tiered attack. First a dictionary attack is performed
+    with all the 6 character passwords in the provided common_passwords.txt
+    appended with other student's found passwords.
+    The we try some randomly generated guesses based on frequency analysis
+    of the character in common_passwords.txt.
+    Then we try all possible permutation of passwords using the 25 most frequent
+    characters.
+    Then to find the remaining high entropy passwords we try all possible
+    permutations within the full character set.
+    */
     generate(n);
     return 0;
   }
 
+  // 2 arg mode: match passwords with hashes
   if (mode == MATCH) {
     char * guessFile = argv[1];
     char * pwdsFile = argv[2];

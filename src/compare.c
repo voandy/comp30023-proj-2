@@ -6,7 +6,7 @@
 #include <memory.h>
 #include <string.h>
 
-#define RAND_LIM 100000
+#define RAND_LIM 1000000
 
 #define DICT_4 "refs/common_4_pwds.txt"
 #define DICT_6 "refs/common_6_pwds.txt"
@@ -15,12 +15,12 @@
 #define ALL_CHARS " !\"#$%&'()*+,-./0123456789:;<=>?`@ABCDEFGHIJKLMNOPQRSTUVWXY\
 Z[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
-static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
-  INTEGER generate);
-static int randomGuess(INTEGER generate);
-static char randChar(CHAR_FREQ * charFreqs);
 static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
   BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx);
+static int randomGuess(INTEGER generate);
+static char randChar(CHAR_FREQ * charFreqs);
+static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
+  INTEGER generate);
 
 // attempt to crack given passwords using a variety of guess methods
 void crack(BYTE ** passwords, int passwordCount) {
@@ -104,50 +104,23 @@ int dictAttack(BYTE ** passwords, int passwordCount, char * dictfile,
   return count;
 }
 
-// generates and tests all 6 char perumations given a set of characters
-static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
-  INTEGER generate) {
 
-  BYTE buf[SHA256_BLOCK_SIZE];
-  SHA256_CTX ctx;
-  memset(&ctx, 0, sizeof(ctx));
+// hashes a guess and compares against all given hashes
+static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
+  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx) {
 
-  INTEGER count = 0;
+  sha256_init(&ctx);
+  sha256_update(&ctx, guess, strlen((const char*)guess));
+  sha256_final(&ctx, buf);
 
-  int size = strlen(characters);
-  BYTE guess[7];
-
-  // forgive me Dennis Ritchie for I have sinned
-  for (int i=0; i<size; i++) {
-    for (int j=0; j<size; j++) {
-      for (int k=0; k<size; k++) {
-        for (int l=0; l<size; l++) {
-          for (int m=0; m<size; m++) {
-            for (int n=0; n<size; n++) {
-              guess[0] = characters[i];
-              guess[1] = characters[j];
-              guess[2] = characters[k];
-              guess[3] = characters[l];
-              guess[4] = characters[m];
-              guess[5] = characters[n];
-              guess[6] = 0;
-
-              if (generate) {
-                printf("%s\n", guess);
-                count++;
-                if (count >= generate) {
-                  return count;
-                }
-              } else {
-                comparePWD(guess, passwords, passwordCount, buf, ctx);
-              }
-            }
-          }
-        }
-      }
+  for (int i=0; i<passwordCount; i++) {
+    if (!memcmp(passwords[i], buf, SHA256_BLOCK_SIZE)) {
+      printf("%s %d\n", guess, i + 1);
+      return i;
     }
   }
-  return count;
+
+  return 0;
 }
 
 // tries random passwords based on most frequent characters
@@ -200,20 +173,48 @@ static char randChar(CHAR_FREQ * charFreqs) {
   return c;
 }
 
-// hashes a guess and compares against all given hashes
-static int comparePWD(BYTE guess[], BYTE ** passwords, int passwordCount,
-  BYTE buf[SHA256_BLOCK_SIZE], SHA256_CTX ctx) {
+// generates and tests all 6 char perumations given a set of characters
+static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
+  INTEGER generate) {
 
-  sha256_init(&ctx);
-  sha256_update(&ctx, guess, strlen((const char*)guess));
-  sha256_final(&ctx, buf);
+  BYTE buf[SHA256_BLOCK_SIZE];
+  SHA256_CTX ctx;
+  memset(&ctx, 0, sizeof(ctx));
 
-  for (int i=0; i<passwordCount; i++) {
-    if (!memcmp(passwords[i], buf, SHA256_BLOCK_SIZE)) {
-      printf("%s %d\n", guess, i + 1);
-      return i;
+  INTEGER count = 0;
+
+  int size = strlen(characters);
+  BYTE guess[7];
+
+  // forgive me Dennis Ritchie for I have sinned
+  for (int i=0; i<size; i++) {
+    for (int j=0; j<size; j++) {
+      for (int k=0; k<size; k++) {
+        for (int l=0; l<size; l++) {
+          for (int m=0; m<size; m++) {
+            for (int n=0; n<size; n++) {
+              guess[0] = characters[i];
+              guess[1] = characters[j];
+              guess[2] = characters[k];
+              guess[3] = characters[l];
+              guess[4] = characters[m];
+              guess[5] = characters[n];
+              guess[6] = 0;
+
+              if (generate) {
+                printf("%s\n", guess);
+                count++;
+                if (count >= generate) {
+                  return count;
+                }
+              } else {
+                comparePWD(guess, passwords, passwordCount, buf, ctx);
+              }
+            }
+          }
+        }
+      }
     }
   }
-
-  return 0;
+  return count;
 }
