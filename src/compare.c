@@ -152,7 +152,7 @@ static int stringPerms(BYTE ** passwords, int passwordCount, char * characters,
 
 // tries random passwords based on most frequent characters
 static int randomGuess(INTEGER generate) {
-  CHAR_FREQ charFreqs[NUM_FREQ_CHARS] = {0};
+  CHAR_FREQ charFreqs[NUM_FREQ_CHARS];
 
   char * line = NULL;
   size_t len = 0;
@@ -168,7 +168,7 @@ static int randomGuess(INTEGER generate) {
 
   INTEGER count = 0;
 
-  char guess[6];
+  char guess[7];
 
   while (1) {
     for (int i=0; i<6; i++) {
@@ -187,7 +187,7 @@ static int randomGuess(INTEGER generate) {
 
 // returns a random character based on frequencies given
 static char randChar(CHAR_FREQ * charFreqs) {
-  char c;
+  char c = ' ';
   double randomNum = (double)rand() / (double)RAND_MAX;
 
   for(int i=0; i<NUM_FREQ_CHARS; i++) {
