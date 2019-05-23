@@ -7,7 +7,7 @@ FLAGS = -c -Wall -Wpedantic -std=c99 #-g
 all: mkbin $(OBJS)
 	$(CC) bin/crack.o bin/sha256.o bin/compare.o -o $(OUT)
 
-run-dh: mkbin dh.o
+dh: mkbin dh.o
 	$(CC) bin/dh.o -o dh
 
 crack.o: src/crack.c $(HEADER)
@@ -26,4 +26,4 @@ mkbin:
 	mkdir -p bin
 
 clean:
-	rm -f $(OUT) -r bin
+	rm -f $(OUT) dh -r bin
